@@ -1,19 +1,583 @@
-<!doctype html>
-<html>
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<title>My static Space</title>
-		<link rel="stylesheet" href="style.css" />
-	</head>
-	<body>
-		<div class="card">
-			<h1>Welcome to your static Space!</h1>
-			<p>You can modify this app directly by editing <i>index.html</i> in the Files and versions tab.</p>
-			<p>
-				Also don't forget to check the
-				<a href="https://huggingface.co/docs/hub/spaces" target="_blank">Spaces documentation</a>.
-			</p>
-		</div>
-	</body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sumi-e Notes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@400;600&family=Tsukimi+Rounded:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Tsukimi Rounded', sans-serif;
+            background-color: #f0f8ff;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXBlciIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjZmZmZmZmIiBvcGFjaXR5PSIwLjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjcGFwZXIpIi8+PC9zdmc+');
+        }
+        
+        .japanese-font {
+            font-family: 'Noto Serif JP', serif;
+            font-weight: 600;
+        }
+        
+        .japanese-sans {
+            font-family: 'Noto Sans JP', sans-serif;
+        }
+        
+        .ink-drop {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            transform: scale(0);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .ink-animation {
+            animation: inkSpread 0.8s ease-out forwards;
+        }
+        
+        @keyframes inkSpread {
+            0% {
+                transform: scale(0);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+        
+        .paper-texture {
+            background-color: #f9f9f9;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXBlci10ZXh0dXJlIiB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiNlZWVlZWUiIG9wYWNpdHk9IjAuMiIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXBlci10ZXh0dXJlKSIvPjwvc3ZnPg==');
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .brush-stroke {
+            position: absolute;
+            background-color: #333;
+            transform-origin: left center;
+            z-index: 5;
+            opacity: 0;
+        }
+        
+        .markdown-preview h1, .markdown-preview h2, .markdown-preview h3 {
+            font-family: 'Noto Serif JP', serif;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .markdown-preview h1 {
+            font-size: 1.8rem;
+            border-bottom: 2px solid #d1d5db;
+            padding-bottom: 0.3rem;
+        }
+        
+        .markdown-preview h2 {
+            font-size: 1.5rem;
+        }
+        
+        .markdown-preview h3 {
+            font-size: 1.2rem;
+        }
+        
+        .markdown-preview p {
+            margin-bottom: 1rem;
+        }
+        
+        .markdown-preview ul, .markdown-preview ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .markdown-preview blockquote {
+            border-left: 4px solid #d1d5db;
+            padding-left: 1rem;
+            color: #6b7280;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+        
+        .markdown-preview code {
+            background-color: #f3f4f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-family: monospace;
+        }
+        
+        .markdown-preview pre {
+            background-color: #f3f4f6;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+        
+        .title-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .title-decoration {
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.1) 100%);
+            transform: scaleX(0);
+            transform-origin: left;
+            animation: titleUnderline 1s ease-out 0.5s forwards;
+        }
+        
+        @keyframes titleUnderline {
+            0% {
+                transform: scaleX(0);
+            }
+            100% {
+                transform: scaleX(1);
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .btn-japanese {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-japanese::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-out;
+        }
+        
+        .btn-japanese:hover::after {
+            transform: translateX(100%);
+        }
+        
+        .note-selector-option {
+            font-family: 'Tsukimi Rounded', sans-serif;
+            padding: 8px 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .note-selector-option:hover {
+            background-color: #e6f0ff;
+        }
+        
+        .editor-placeholder::placeholder {
+            font-family: 'Noto Sans JP', sans-serif;
+            color: #9ca3af;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4">
+    <div id="ink-container"></div>
+    
+    <div class="max-w-4xl mx-auto">
+        <!-- Header with decorative elements -->
+        <header class="mb-8 text-center fade-in">
+            <div class="title-container">
+                <h1 class="japanese-font text-4xl font-bold text-gray-800 mb-2">墨絵ノート</h1>
+                <div class="title-decoration"></div>
+            </div>
+            <div class="flex justify-center items-center mt-4">
+                <div class="h-px w-16 bg-gray-300 mr-4"></div>
+                <p class="text-lg text-gray-600 italic">Sumi-e Notes</p>
+                <div class="h-px w-16 bg-gray-300 ml-4"></div>
+            </div>
+        </header>
+        
+        <!-- Controls with Japanese aesthetic -->
+        <div class="flex flex-wrap justify-between items-center mb-6 gap-4 fade-in" style="animation-delay: 0.2s;">
+            <div class="flex gap-2">
+                <button id="new-note-btn" class="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-full transition-all duration-300 flex items-center gap-2 btn-japanese">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="japanese-sans">新規</span> / New
+                </button>
+                <button id="save-note-btn" class="px-4 py-2 bg-green-100 hover:bg-green-200 text-green-800 rounded-full transition-all duration-300 flex items-center gap-2 btn-japanese">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z" />
+                    </svg>
+                    <span class="japanese-sans">保存</span> / Save
+                </button>
+            </div>
+            <div class="flex gap-2">
+                <button id="toggle-view-btn" class="px-4 py-2 bg-purple-100 hover:bg-purple-200 text-purple-800 rounded-full transition-all duration-300 flex items-center gap-2 btn-japanese">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    <span class="japanese-sans">表示切替</span> / Toggle
+                </button>
+                <button id="delete-note-btn" class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-800 rounded-full transition-all duration-300 flex items-center gap-2 btn-japanese">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="japanese-sans">削除</span> / Delete
+                </button>
+            </div>
+        </div>
+        
+        <!-- Note selector with custom style -->
+        <div class="mb-6 fade-in" style="animation-delay: 0.4s;">
+            <select id="note-selector" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 bg-white paper-texture appearance-none">
+                <option value="" disabled selected class="note-selector-option"><span class="japanese-sans">ノートを選択...</span> / Select a note...</option>
+            </select>
+        </div>
+        
+        <!-- Editor and Preview with smooth transitions -->
+        <div class="grid grid-cols-1 gap-6 fade-in" style="animation-delay: 0.6s;">
+            <div id="editor-container" class="h-96 transition-all duration-500">
+                <textarea id="note-editor" class="w-full h-full p-6 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 resize-none paper-texture editor-placeholder" placeholder="筆を執って... / Begin your notes here..."></textarea>
+            </div>
+            <div id="preview-container" class="h-96 p-6 border border-gray-300 rounded-lg overflow-y-auto hidden paper-texture markdown-preview transition-all duration-500"></div>
+        </div>
+        
+        <!-- Status message with Japanese style -->
+        <div id="status-message" class="mt-4 text-center text-gray-500 transition-opacity duration-300 opacity-0 fade-in" style="animation-delay: 0.8s;"></div>
+        
+        <!-- Decorative footer -->
+        <footer class="mt-8 text-center text-gray-400 text-sm fade-in" style="animation-delay: 1s;">
+            <div class="flex justify-center items-center">
+                <div class="h-px w-16 bg-gray-300 mr-4"></div>
+                <p class="japanese-sans">墨と紙の調和</p>
+                <div class="h-px w-16 bg-gray-300 ml-4"></div>
+            </div>
+            <p class="mt-2">Harmony of Ink and Paper</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const noteEditor = document.getElementById('note-editor');
+            const noteSelector = document.getElementById('note-selector');
+            const newNoteBtn = document.getElementById('new-note-btn');
+            const saveNoteBtn = document.getElementById('save-note-btn');
+            const deleteNoteBtn = document.getElementById('delete-note-btn');
+            const toggleViewBtn = document.getElementById('toggle-view-btn');
+            const previewContainer = document.getElementById('preview-container');
+            const editorContainer = document.getElementById('editor-container');
+            const statusMessage = document.getElementById('status-message');
+            const inkContainer = document.getElementById('ink-container');
+            
+            // State
+            let notes = JSON.parse(localStorage.getItem('sumi-e-notes')) || {};
+            let currentNoteId = null;
+            let isPreviewMode = false;
+            
+            // Initialize
+            updateNoteSelector();
+            
+            // Event Listeners
+            newNoteBtn.addEventListener('click', createNewNote);
+            saveNoteBtn.addEventListener('click', saveCurrentNote);
+            deleteNoteBtn.addEventListener('click', deleteCurrentNote);
+            toggleViewBtn.addEventListener('click', togglePreviewMode);
+            noteSelector.addEventListener('change', loadSelectedNote);
+            
+            // Functions
+            function createNewNote() {
+                const id = Date.now().toString();
+                const title = '新しいノート ' + (Object.keys(notes).length + 1);
+                
+                notes[id] = {
+                    title: title,
+                    content: '',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                
+                currentNoteId = id;
+                noteEditor.value = '';
+                updateNoteSelector();
+                noteSelector.value = id;
+                showStatus('新しいノートを作成しました / New note created', 'blue');
+                createInkEffect(newNoteBtn);
+                
+                // Focus editor after creation
+                setTimeout(() => {
+                    noteEditor.focus();
+                }, 300);
+            }
+            
+            function saveCurrentNote() {
+                if (!currentNoteId) {
+                    showStatus('ノートが選択されていません / No note selected', 'red');
+                    return;
+                }
+                
+                const content = noteEditor.value;
+                const firstLine = content.split('\n')[0] || '無題のノート / Untitled Note';
+                const title = firstLine.length > 30 ? firstLine.substring(0, 30) + '...' : firstLine;
+                
+                notes[currentNoteId] = {
+                    title: title,
+                    content: content,
+                    createdAt: notes[currentNoteId]?.createdAt || new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                
+                localStorage.setItem('sumi-e-notes', JSON.stringify(notes));
+                updateNoteSelector();
+                showStatus('ノートを保存しました / Note saved', 'green');
+                createInkEffect(saveNoteBtn);
+                
+                if (isPreviewMode) {
+                    updatePreview();
+                }
+            }
+            
+            function deleteCurrentNote() {
+                if (!currentNoteId) {
+                    showStatus('ノートが選択されていません / No note selected', 'red');
+                    return;
+                }
+                
+                if (confirm('このノートを削除しますか？ / Are you sure you want to delete this note?')) {
+                    delete notes[currentNoteId];
+                    localStorage.setItem('sumi-e-notes', JSON.stringify(notes));
+                    
+                    currentNoteId = null;
+                    noteEditor.value = '';
+                    updateNoteSelector();
+                    showStatus('ノートを削除しました / Note deleted', 'red');
+                    createInkEffect(deleteNoteBtn);
+                    
+                    if (isPreviewMode) {
+                        togglePreviewMode();
+                    }
+                }
+            }
+            
+            function loadSelectedNote() {
+                const selectedId = noteSelector.value;
+                if (!selectedId) return;
+                
+                currentNoteId = selectedId;
+                noteEditor.value = notes[selectedId]?.content || '';
+                
+                if (isPreviewMode) {
+                    updatePreview();
+                }
+                
+                showStatus('ノートを読み込みました / Note loaded', 'blue');
+                
+                // Create brush stroke effect when loading
+                createBrushStrokeEffect();
+            }
+            
+            function togglePreviewMode() {
+                isPreviewMode = !isPreviewMode;
+                
+                if (isPreviewMode) {
+                    if (!noteEditor.value.trim()) {
+                        showStatus('プレビューする内容がありません / Nothing to preview', 'yellow');
+                        isPreviewMode = false;
+                        return;
+                    }
+                    
+                    editorContainer.classList.add('hidden');
+                    previewContainer.classList.remove('hidden');
+                    updatePreview();
+                    toggleViewBtn.innerHTML = '<span class="japanese-sans">編集モード</span> / Edit Mode';
+                } else {
+                    editorContainer.classList.remove('hidden');
+                    previewContainer.classList.add('hidden');
+                    toggleViewBtn.innerHTML = '<span class="japanese-sans">プレビューモード</span> / Preview Mode';
+                }
+                
+                createBrushStrokeEffect();
+            }
+            
+            function updatePreview() {
+                if (!currentNoteId) return;
+                
+                const content = notes[currentNoteId]?.content || '';
+                previewContainer.innerHTML = marked.parse(content);
+                
+                // Add fade-in effect to preview content
+                const elements = previewContainer.children;
+                for (let i = 0; i < elements.length; i++) {
+                    elements[i].style.opacity = '0';
+                    elements[i].style.transform = 'translateY(10px)';
+                    elements[i].style.transition = `all 0.3s ease ${i * 0.1}s`;
+                    
+                    setTimeout(() => {
+                        elements[i].style.opacity = '1';
+                        elements[i].style.transform = 'translateY(0)';
+                    }, 50);
+                }
+            }
+            
+            function updateNoteSelector() {
+                noteSelector.innerHTML = '<option value="" disabled selected class="note-selector-option"><span class="japanese-sans">ノートを選択...</span> / Select a note...</option>';
+                
+                // Sort notes by updatedAt (newest first)
+                const sortedNotes = Object.entries(notes).sort((a, b) => {
+                    return new Date(b[1].updatedAt) - new Date(a[1].updatedAt);
+                });
+                
+                sortedNotes.forEach(([id, note]) => {
+                    const option = document.createElement('option');
+                    option.value = id;
+                    option.textContent = note.title;
+                    option.className = 'note-selector-option';
+                    noteSelector.appendChild(option);
+                });
+            }
+            
+            function showStatus(message, color) {
+                statusMessage.innerHTML = `<span class="japanese-sans">${message.split(' / ')[0]}</span> / ${message.split(' / ')[1] || message}`;
+                statusMessage.className = `mt-4 text-center transition-opacity duration-300 opacity-100 text-${color}-600 fade-in`;
+                
+                setTimeout(() => {
+                    statusMessage.classList.add('opacity-0');
+                }, 3000);
+            }
+            
+            function createInkEffect(element) {
+                const rect = element.getBoundingClientRect();
+                const x = rect.left + rect.width / 2 - 150;
+                const y = rect.top + rect.height / 2 - 150;
+                
+                const inkDrop = document.createElement('div');
+                inkDrop.className = 'ink-drop ink-animation';
+                inkDrop.style.left = `${x}px`;
+                inkDrop.style.top = `${y}px`;
+                
+                inkContainer.appendChild(inkDrop);
+                
+                setTimeout(() => {
+                    inkDrop.remove();
+                }, 800);
+            }
+            
+            function createBrushStrokeEffect() {
+                // Clear any existing strokes
+                document.querySelectorAll('.brush-stroke').forEach(el => el.remove());
+                
+                const targetContainer = isPreviewMode ? previewContainer : editorContainer;
+                
+                // Create 3-5 random brush strokes
+                const strokeCount = 3 + Math.floor(Math.random() * 3);
+                
+                for (let i = 0; i < strokeCount; i++) {
+                    const stroke = document.createElement('div');
+                    stroke.className = 'brush-stroke';
+                    
+                    const width = Math.random() * 150 + 50;
+                    const height = Math.random() * 10 + 2;
+                    const angle = Math.random() * 45 - 22.5;
+                    const opacity = Math.random() * 0.5 + 0.3;
+                    
+                    stroke.style.width = `${width}px`;
+                    stroke.style.height = `${height}px`;
+                    stroke.style.opacity = `${opacity}`;
+                    stroke.style.transform = `rotate(${angle}deg)`;
+                    stroke.style.borderRadius = `${height}px`;
+                    
+                    const containerRect = targetContainer.getBoundingClientRect();
+                    const x = Math.random() * (containerRect.width - width);
+                    const y = Math.random() * (containerRect.height - height);
+                    
+                    stroke.style.left = `${containerRect.left + x}px`;
+                    stroke.style.top = `${containerRect.top + y}px`;
+                    
+                    document.body.appendChild(stroke);
+                    
+                    // Animate in
+                    setTimeout(() => {
+                        stroke.style.transition = 'opacity 0.5s ease-out, transform 0.8s ease-out';
+                        stroke.style.opacity = '0.7';
+                        
+                        // Animate out after a delay
+                        setTimeout(() => {
+                            stroke.style.opacity = '0';
+                            stroke.style.transform = `rotate(${angle + Math.random() * 20 - 10}deg) scaleX(${1 + Math.random() * 0.5})`;
+                            
+                            setTimeout(() => {
+                                stroke.remove();
+                            }, 500);
+                        }, 800);
+                    }, i * 200);
+                }
+            }
+            
+            // Simple markdown parser (using marked.js)
+            const marked = {
+                parse: function(markdown) {
+                    // Headers
+                    markdown = markdown.replace(/^# (.*$)/gm, '<h1>$1</h1>');
+                    markdown = markdown.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+                    markdown = markdown.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+                    
+                    // Bold
+                    markdown = markdown.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                    
+                    // Italics
+                    markdown = markdown.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                    
+                    // Lists
+                    markdown = markdown.replace(/^\* (.*$)/gm, '<li>$1</li>');
+                    markdown = markdown.replace(/<li>.*<\/li>/g, function(match) {
+                        return '<ul>' + match + '</ul>';
+                    });
+                    
+                    // Links
+                    markdown = markdown.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-blue-600 hover:underline">$1</a>');
+                    
+                    // Blockquotes
+                    markdown = markdown.replace(/^> (.*$)/gm, '<blockquote>$1</blockquote>');
+                    
+                    // Code blocks
+                    markdown = markdown.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+                    markdown = markdown.replace(/`(.*?)`/g, '<code>$1</code>');
+                    
+                    // Paragraphs
+                    markdown = markdown.replace(/^(?!<[a-z])(.*$)/gm, function(m) {
+                        return m.trim() ? '<p>' + m + '</p>' : '';
+                    });
+                    
+                    // Line breaks
+                    markdown = markdown.replace(/\n/g, '<br>');
+                    
+                    return markdown;
+                }
+            };
+            
+            // Add initial animations
+            setTimeout(() => {
+                createBrushStrokeEffect();
+            }, 1000);
+        });
+    </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=BaBoi/sumi-e-notes" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
 </html>
